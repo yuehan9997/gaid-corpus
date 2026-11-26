@@ -3,7 +3,7 @@
 This repository contains the code that builds the GAID corpus (Generative-AI Declarations), a collection of authors'
 statements about the use or non-use of generative AI in the open-access full text of Europe PMC / PubMed Central
 articles first published between 2023-01-01 and 2026-10-31. The dataset is deposited on Zenodo
-(https://doi.org/[dataset DOI]) and is described in the accompanying Data Descriptor.
+(https://doi.org/10.5281/zenodo.24553607) and is described in the accompanying Data Descriptor.
 
 ## Requirements
 
@@ -127,4 +127,4 @@ Code: MIT (see `LICENSE`). Data: CC BY 4.0 with the exceptions stated in the dat
 
 ## Citation
 
-If you use the code or the data, please cite the Data Descriptor and the dataset (https://doi.org/[dataset DOI]).
+If you use the code or the data, please cite the Data Descriptor and the dataset (https://doi.org/10.5281/zenodo.24553607).
