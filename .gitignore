@@ -1,0 +1,12 @@
+# API keys
+.env
+
+# generated data, logs and figures
+data/
+logs/
+paper/
+annotation/annotate_gaid.html
+
+__pycache__/
+*.pyc
+~$*
