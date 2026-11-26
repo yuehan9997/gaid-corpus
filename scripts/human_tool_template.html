@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAID human validation</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1c2330; --muted:#5d6b7e; --line:#d9dee6; --accent:#1f5fbf; --ok:#1c7c4a; --warn:#b3541e; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 "Segoe UI", system-ui, -apple-system, "Microsoft YaHei", sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:var(--card); border-bottom:1px solid var(--line); padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  header h1 { font-size:16px; margin:0 12px 0 0; }
+  header input[type=text] { padding:6px 8px; border:1px solid var(--line); border-radius:6px; width:150px; }
+  button { padding:6px 12px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font:inherit; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:disabled { opacity:.45; cursor:default; }
+  #progress { font-variant-numeric: tabular-nums; color:var(--muted); }
+  main { display:grid; grid-template-columns: minmax(0,1.25fr) minmax(320px,1fr); gap:16px; padding:16px; max-width:1400px; margin:0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#e8eefc; color:#1b3f85; margin-right:6px; }
+  .heading { color:var(--muted); font-size:13px; margin:8px 0 4px; }
+  .text { white-space:pre-wrap; font-size:16px; line-height:1.6; background:#fbfbfd; border:1px solid var(--line); border-radius:8px; padding:12px; max-height:60vh; overflow:auto; }
+  fieldset { border:1px solid var(--line); border-radius:8px; margin:0 0 12px; padding:10px 12px; }
+  legend { font-weight:600; padding:0 6px; }
+  label { margin-right:14px; white-space:nowrap; display:inline-block; padding:2px 0; }
+  .hint { color:var(--muted); font-size:12.5px; }
+  textarea { width:100%; min-height:54px; border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; }
+  .dim { opacity:.4; pointer-events:none; }
+  details { margin:0 16px 16px; max-width:1368px; margin-left:auto; margin-right:auto; }
+  details > summary { cursor:pointer; font-weight:600; padding:8px 0; }
+  pre.codebook { white-space:pre-wrap; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; font:13px/1.55 Consolas, "Courier New", monospace; }
+  .state { font-size:12px; margin-left:6px; }
+  .state.done { color:var(--ok); } .state.todo { color:var(--warn); }
+  .nav { display:flex; gap:8px; align-items:center; margin-top:8px; }
+  #jump { width:70px; padding:6px; border:1px solid var(--line); border-radius:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GAID human validation <span class="hint">人工验证标注</span></h1>
+  <label>Annotator ID 标注者: <input type="text" id="annotator" placeholder="e.g. A1"></label>
+  <span id="progress"></span>
+  <button id="export" class="primary">Export JSON 导出</button>
+  <label class="hint">Resume from file 载入已有结果: <input type="file" id="import" accept=".json"></label>
+</header>
+
+<details>
+  <summary>Annotation guideline (codebook v__CBVER__): 点击展开标注手册。请先通读一遍再开始；每条只依据文本本身判断。</summary>
+  <pre class="codebook">__CODEBOOK__</pre>
+</details>
+
+<main>
+  <section class="card">
+    <div><span class="badge" id="loc"></span><span class="hint" id="locdesc"></span><span id="state" class="state"></span></div>
+    <div class="heading">Section heading 章节标题: <b id="heading"></b></div>
+    <div class="text" id="text"></div>
+    <div class="nav">
+      <button id="prev">◀ Prev 上一条</button>
+      <button id="next" class="primary">Save &amp; Next 保存并下一条 ▶</button>
+      <span class="hint">Go to 跳转 #</span><input id="jump" type="number" min="1">
+      <button id="nextTodo">Next unfinished 下一条未完成</button>
+    </div>
+    <p class="hint">Shortcuts 快捷键: <b>Y</b>/<b>N</b> = declaration yes/no; <b>←</b>/<b>→</b> = previous/next (when not typing). Answers are saved in this browser automatically; export regularly.</p>
+  </section>
+
+  <section class="card" id="form">
+    <fieldset>
+      <legend>1. decl: AI-use declaration? 是否为 AI 使用声明</legend>
+      <label><input type="radio" name="decl" value="1"> Yes 是</label>
+      <label><input type="radio" name="decl" value="0"> No 否</label>
+      <div class="hint">Authors disclose whether/how AI or AI-assisted tools were used as an aid in preparing the article or doing the work (including statements of non-use). Not: AI as research object/method, names of funders/institutions, author initials, publisher notices.</div>
+    </fieldset>
+    <div id="rest">
+      <fieldset>
+        <legend>2. pol: polarity 极性</legend>
+        <label><input type="radio" name="pol" value="use"> use 使用了</label>
+        <label><input type="radio" name="pol" value="no_use"> no_use 未使用</label>
+        <label><input type="radio" name="pol" value="na"> na (“Not applicable”)</label>
+        <label><input type="radio" name="pol" value="unclear"> unclear 无法判断</label>
+      </fieldset>
+      <div id="useonly">
+        <fieldset>
+          <legend>3. tools: named tools the authors used 作者使用的具名工具</legend>
+          <textarea id="tools" placeholder="One per line or separated by ';'  e.g.  ChatGPT; Grammarly"></textarea>
+          <div class="hint">Product/model names only (no vendor, no generic "AI tools"); leave empty if none is named. Versions are not needed here.</div>
+        </fieldset>
+        <fieldset>
+          <legend>4. purp: purposes 用途 (all that apply 可多选)</legend>
+          <div id="purp"></div>
+        </fieldset>
+        <fieldset>
+          <legend>7. nonuse: also states what AI was NOT used for? 是否同时明确否定了 AI 在某些任务中的参与</legend>
+          <label><input type="radio" name="nonuse" value="1"> Yes</label>
+          <label><input type="radio" name="nonuse" value="0"> No</label>
+        </fieldset>
+      </div>
+      <fieldset>
+        <legend>5. resp: explicit responsibility statement? 明确声明作者承担责任</legend>
+        <label><input type="radio" name="resp" value="1"> Yes</label>
+        <label><input type="radio" name="resp" value="0"> No</label>
+      </fieldset>
+      <fieldset>
+        <legend>6. rev: authors reviewed / edited / verified the AI output? 声明作者审阅/核查了 AI 输出</legend>
+        <label><input type="radio" name="rev" value="1"> Yes</label>
+        <label><input type="radio" name="rev" value="0"> No</label>
+      </fieldset>
+    </div>
+    <fieldset>
+      <legend>Comment 备注 (optional)</legend>
+      <textarea id="comment" placeholder="Anything unclear about this item"></textarea>
+    </fieldset>
+  </section>
+</main>
+
+<script>
+const ITEMS = __ITEMS__;
+const PURPOSES = [["LANG","language editing 语言润色"],["TRANS","translation 翻译"],["DRAFT","generating new text 生成/起草文本"],["LIT","literature search / summarising 文献检索与综述"],["IDEA","ideas / feedback 构思与反馈"],["CODE","code 代码"],["DATA","data analysis / interpretation 数据分析"],["VIS","figures / images 图表图像"],["FORMAT","formatting / references 格式与参考文献"],["OTHER","other stated purpose 其他"],["UNSPEC","no / vague purpose 未说明用途"]];
+const LOCDESC = {ai_section:"under a heading that announces an AI-use declaration", decl_zone:"acknowledgements / declarations / footnotes / back matter", body:"main text"};
+const KEY = "gaid_human_v1";
+let answers = {}; let cur = 0;
+function load() { try { const s = localStorage.getItem(KEY); if (s) { const d = JSON.parse(s); answers = d.answers || {}; cur = Math.min(d.cur || 0, ITEMS.length-1); document.getElementById("annotator").value = d.annotator || ""; } } catch (e) {} }
+function persist() { try { localStorage.setItem(KEY, JSON.stringify({answers, cur, annotator: document.getElementById("annotator").value})); } catch (e) {} }
+function radio(name) { const el = document.querySelector('input[name="'+name+'"]:checked'); return el ? el.value : null; }
+function setRadio(name, v) { document.querySelectorAll('input[name="'+name+'"]').forEach(function (el) { el.checked = (v !== null && v !== undefined && String(v) === el.value); }); }
+function collect() {
+  const decl = radio("decl"); if (decl === null) return null;
+  const a = {key: ITEMS[cur].key, decl: Number(decl), comment: document.getElementById("comment").value.trim()};
+  if (a.decl === 1) {
+    a.pol = radio("pol"); a.resp = Number(radio("resp") || 0); a.rev = Number(radio("rev") || 0);
+    if (a.pol === "use") { a.tools = document.getElementById("tools").value.trim(); a.purp = Array.from(document.querySelectorAll("#purp input:checked")).map(function (x) { return x.value; }); a.nonuse = Number(radio("nonuse") || 0); }
+    else { a.tools = ""; a.purp = []; a.nonuse = 0; }
+  } else { a.pol = null; a.tools = ""; a.purp = []; a.resp = 0; a.rev = 0; a.nonuse = 0; }
+  return a;
+}
+function complete(a) { if (!a) return false; if (a.decl === 0) return true; if (!a.pol) return false; if (a.pol === "use" && (!a.purp || a.purp.length === 0)) return false; return true; }
+function save() { const a = collect(); if (a) { answers[ITEMS[cur].key] = a; } persist(); return a; }
+function gate() { const decl = radio("decl"); document.getElementById("rest").classList.toggle("dim", decl !== "1"); document.getElementById("useonly").classList.toggle("dim", radio("pol") !== "use"); }
+function render() {
+  const it = ITEMS[cur];
+  document.getElementById("loc").textContent = it.loc; document.getElementById("locdesc").textContent = LOCDESC[it.loc] || "";
+  document.getElementById("heading").textContent = it.heading || "(none)"; document.getElementById("text").textContent = it.text;
+  const a = answers[it.key] || {};
+  setRadio("decl", a.decl); setRadio("pol", a.pol); setRadio("resp", a.resp); setRadio("rev", a.rev); setRadio("nonuse", a.nonuse);
+  document.getElementById("tools").value = a.tools || ""; document.getElementById("comment").value = a.comment || "";
+  document.querySelectorAll("#purp input").forEach(function (x) { x.checked = !!(a.purp && a.purp.indexOf(x.value) >= 0); });
+  const done = ITEMS.filter(function (x) { return complete(answers[x.key]); }).length;
+  document.getElementById("progress").textContent = "item " + (cur+1) + " / " + ITEMS.length + "  ·  completed " + done;
+  const st = document.getElementById("state"); const ok = complete(answers[it.key]); st.textContent = ok ? "✓ saved" : "not yet complete"; st.className = "state " + (ok ? "done" : "todo");
+  document.getElementById("prev").disabled = cur === 0; document.getElementById("jump").value = cur+1; gate();
+}
+function go(i) { save(); cur = Math.max(0, Math.min(ITEMS.length-1, i)); persist(); render(); window.scrollTo(0,0); }
+document.getElementById("purp").innerHTML = PURPOSES.map(function (p) { return '<label><input type="checkbox" value="'+p[0]+'"> <b>'+p[0]+'</b> <span class="hint">'+p[1]+'</span></label><br>'; }).join("");
+document.getElementById("form").addEventListener("change", function () { gate(); save(); });
+document.getElementById("prev").onclick = function () { go(cur-1); };
+document.getElementById("next").onclick = function () { const a = collect(); if (!complete(a)) { alert("Please complete this item first (decl; if yes: polarity; if use: at least one purpose).\n请先完成本条。"); return; } go(cur+1); };
+document.getElementById("nextTodo").onclick = function () { save(); for (let k = 1; k <= ITEMS.length; k++) { const i = (cur + k) % ITEMS.length; if (!complete(answers[ITEMS[i].key])) { cur = i; persist(); render(); return; } } alert("All items are complete. 全部完成，请导出。"); };
+document.getElementById("jump").onchange = function (e) { go(Number(e.target.value)-1); };
+document.getElementById("annotator").onchange = persist;
+document.getElementById("export").onclick = function () {
+  save(); const who = (document.getElementById("annotator").value || "anon").replace(/[^A-Za-z0-9_-]/g, "");
+  const items = ITEMS.map(function (x) { return answers[x.key] || {key: x.key, decl: null}; });
+  const blob = new Blob([JSON.stringify({annotator: who, exported: new Date().toISOString(), codebook: "__CBVER__", n_items: ITEMS.length, items: items}, null, 1)], {type: "application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "gaid_human_" + who + ".json"; document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById("import").onchange = function (e) {
+  const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = function () { try { const d = JSON.parse(r.result); (d.items || []).forEach(function (it) { if (it.decl !== null && it.decl !== undefined) answers[it.key] = it; }); if (d.annotator) document.getElementById("annotator").value = d.annotator; persist(); render(); } catch (err) { alert("Could not read file"); } };
+  r.readAsText(f);
+};
+document.addEventListener("keydown", function (e) {
+  const t = e.target.tagName; if (t === "TEXTAREA" || (t === "INPUT" && e.target.type !== "radio" && e.target.type !== "checkbox")) return;
+  if (e.key === "y" || e.key === "Y") { setRadio("decl", 1); gate(); save(); }
+  else if (e.key === "n" || e.key === "N") { setRadio("decl", 0); gate(); save(); }
+  else if (e.key === "ArrowLeft") { go(cur-1); }
+  else if (e.key === "ArrowRight") { document.getElementById("next").click(); }
+});
+load(); render();
+</script>
+</body>
+</html>
